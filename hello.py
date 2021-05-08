@@ -8,3 +8,11 @@ app = Flask(__name__)
 
 def index():
     return "<h1>Hello World!</h1>"
+
+# localhost:5000/user/mary
+@app.route('/user/<name>')
+
+def user(name):
+    return "<h1>Hello, {}!</h1>".format(name)
+#set FLASK_APP=hello.py
+#set FLASK_ENV=development
