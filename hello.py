@@ -35,4 +35,14 @@ def user(name):
 #set FLASK_APP=hello.py
 #set FLASK_ENV=development
 
+# Create Custom Error Page
 
+#invalid url
+@app.errorhandler(404)
+def page_not_fount(e):
+    return render_template("404.html")
+
+#internal server error
+@app.errorhandler(500)
+def page_not_fount(e):
+    return render_template("500.html")
