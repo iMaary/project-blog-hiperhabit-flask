@@ -16,6 +16,6 @@ def index():
 @app.route('/user/<name>')
 
 def user(name):
-    return "<h1>Hello, {}!</h1>".format(name)
+    return render_template("user.html", user_name=name)
 #set FLASK_APP=hello.py
 #set FLASK_ENV=development
