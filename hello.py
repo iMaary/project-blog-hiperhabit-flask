@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, flash
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
@@ -28,9 +28,10 @@ class NamerForm(FlaskForm):
 # spritags
 
 def index():
-    first_name = "Mary"
-    stuff = "This is <strong>Bold</strong> tag"
-    favorites_pizza = ["Mussarela", "Calabresa", "Marguetira", "4 Queijos", 41]
+    first_name = "Maria"
+    stuff = "Essa é minha <strong>Lista</strong>"
+    flash("Seja Bem Vindo(a)!")
+    favorites_pizza = ["Caminhar", "Diminuir Sal", "Dormir 8h+", "Beber água"]
     return render_template("index.html",
                             first_name=first_name,
                             stuff=stuff,
@@ -66,6 +67,8 @@ def name():
     if form.validate_on_submit():
         name = form.name.data
         form.name.data = ''
+        flash("Formulário Submetido Com Sucesso!")
+
     return render_template("name.html",
                             name = name,
                             form = form)
