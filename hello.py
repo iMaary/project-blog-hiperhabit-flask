@@ -24,13 +24,20 @@ class Users(db.Model):
     email = db.Column(db.String(120), nullable=False, unique=True)
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
 
+#Create A String
+def __repr__(self):
+    return '<Name %r>' % self.name
+
+# Create a form class
+class UserForm(FlaskForm):
+    name = StringField("Name", validators=[DataRequired()])
+    email = StringField("Email", validators=[DataRequired()])
+    submit = SubmitField("Submit")
+
 # Create a form class
 class NamerForm(FlaskForm):
     name = StringField("Qual é o seu nome?", validators=[DataRequired()])
     submit = SubmitField("Submit")
-
-#create a route decorate (it's how ...url.../home.html)
-@app.route('/') # it works when there ins't route name
 
 #def index():
 #    return "<h1>Hello World!</h1>"
@@ -43,6 +50,9 @@ class NamerForm(FlaskForm):
 # title
 # trim
 # spritags
+
+#create a route decorate (it's how ...url.../home.html)
+@app.route('/') # it works when there ins't route name
 
 def index():
     first_name = "Maria"
@@ -62,6 +72,43 @@ def user(name):
 #set FLASK_APP=hello.py
 #set FLASK_ENV=development
 
+# Local create user register 
+@app.route('/user/add', methods=['GET', 'POST'])
+
+def add_user():
+    name = None
+    form = UserForm()
+    # Validate Form if it was Submited
+    if form.validate_on_submit():
+        user = Users.query.filter_by(email=form.email.data).first()
+        if user is None:
+            user = Users(name=form.name.data, email=form.email.data)
+            db.session.add(user)
+            db.session.commit()
+        name = form.name.data
+        form.name.data = ''
+        form.email.data = ''
+        flash("Usuário Adicionado Com Sucesso!")
+    our_users = Users.query.order_by(Users.date_added)
+    return render_template("add_user.html", name=name,
+                                            form=form,
+                                            our_users=our_users)
+
+# Create Name Page
+@app.route('/name', methods=['GET', 'POST'])
+
+def name():
+    name = None
+    form = NamerForm()
+    # Validate Form if it was Submited
+    if form.validate_on_submit():
+        name = form.name.data
+        form.name.data = ''
+        flash("Formulário Submetido Com Sucesso!")
+
+    return render_template("name.html", name = name,
+                                        form = form)
+
 # Create Custom Error Page
 
 #invalid url
@@ -73,19 +120,3 @@ def page_not_fount(e):
 @app.errorhandler(500)
 def page_not_fount(e):
     return render_template("500.html")
-
-# Create Name Page
-@app.route('/name', methods=['GET', 'POST'])
-
-def name():
-    name = None
-    form = NamerForm()
-    # Validate Form
-    if form.validate_on_submit():
-        name = form.name.data
-        form.name.data = ''
-        flash("Formulário Submetido Com Sucesso!")
-
-    return render_template("name.html",
-                            name = name,
-                            form = form)
