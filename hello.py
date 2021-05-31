@@ -1,5 +1,6 @@
-from flask import Flask, render_template, flash
-from flask_wtf import FlaskForm
+from flask import Flask, render_template, flash, request
+from flask.signals import request_finished
+from flask_wtf import FlaskForm, form
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired, Email
 from flask_sqlalchemy import SQLAlchemy
@@ -9,17 +10,22 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Add database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+#Old SQLite DB
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+# New MySQL DB
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://username:password@localhost/db_name'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:62777999&aooa@localhost/our_users'
 
-# secret key
+# Secret Key
 app.config['SECRET_KEY'] = "senha muito secreta"
 
 # The initialize the database
 db = SQLAlchemy(app)
 
+
 # Create Model
 class Users(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True) # Primary Key
     name = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(120), nullable=False, unique=True)
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
@@ -33,6 +39,30 @@ class UserForm(FlaskForm):
     name = StringField("Name", validators=[DataRequired()])
     email = StringField("Email", validators=[DataRequired()])
     submit = SubmitField("Submit")
+
+# Update Database Record
+@app.route('/update/<int:id>', methods=['GET', 'POST'])
+def update(id):
+    form = UserForm()
+    name_to_update = Users.query.get_or_404(id)
+    if request.method == "POST":
+        name_to_update.name = request.form['name']
+        name_to_update.email =  request.form['email']
+        try:
+            db.session.commit()
+            flash("Usuário Atualizado com Sucesso")
+            return render_template("update.html",
+                form=form,
+                name_to_update = name_to_update)
+        except:
+            flash("ERRO! Parece que ocorreu algum problema... tente novamente")
+            return render_template("update.html",
+                form=form,
+                name_to_update = name_to_update)
+    else:
+        return render_template("update.html",
+                form=form,
+                name_to_update = name_to_update)
 
 # Create a form class
 class NamerForm(FlaskForm):
@@ -51,7 +81,7 @@ class NamerForm(FlaskForm):
 # trim
 # spritags
 
-#create a route decorate (it's how ...url.../home.html)
+#Create a route decorate (it's how ...url.../home.html)
 @app.route('/') # it works when there ins't route name
 
 def index():
