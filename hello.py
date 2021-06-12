@@ -1,6 +1,8 @@
+from operator import pos
 from flask import Flask, render_template, flash, request
 from flask.signals import request_finished
 from flask_wtf import FlaskForm, form
+from werkzeug.wrappers import AuthorizationMixin
 from wtforms import StringField, SubmitField, PasswordField, BooleanField
 from wtforms.fields.simple import PasswordField
 from wtforms.validators import DataRequired, Email, EqualTo, Length
@@ -9,6 +11,7 @@ from flask_migrate import Migrate, migrate
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date
+from wtforms.widgets.core import TextArea
 
 # now create a flask instance
 app = Flask(__name__)
@@ -26,6 +29,48 @@ app.config['SECRET_KEY'] = "senha muito secreta"
 # The initialize the database
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+# Create a Blog Post Model
+class Posts(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255))
+    content = db.Column(db.Text)
+    author = db.Column(db.String(255))
+    date_posted = db.Column(db.DateTime, default=datetime.utcnow)
+    # It's what will stay after of the route
+    slug = db.Column(db.String(255))
+
+# Create a Post Form
+class PostForm(FlaskForm):
+    title = StringField("Title", validators=[DataRequired()])
+    content = StringField("Content", validators=[DataRequired()], widget=TextArea())
+    author = StringField("Author", validators=[DataRequired()])
+    slug = StringField("Slug", validators=[DataRequired()])
+    submit = SubmitField("Submit", validators=[DataRequired()])
+
+# Add Post Page
+@app.route('/add-post', methods=['GET', 'POST'])
+def add_post():
+    form = PostForm()
+
+    if form.validate_on_submit():
+        post = Posts(title=form.title.data, content=form.content.data, author=form.author.data, slug=form.slug.data)
+        # Clear The Form
+        form.title.data = ''
+        form.content.data = ''
+        form.author.data = ''
+        form.slug.data = ''
+
+        # Add post data to database
+        db.session.add(post)
+        db.session.commit()
+
+        # Return a Message
+        flash('Postado com Sucesso!')
+
+    # Redirect to Webpage
+    return render_template("add_post.html", form=form)
+
 
 # JASON Thing
 @app.route('/date')
