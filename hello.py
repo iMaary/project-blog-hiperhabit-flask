@@ -107,6 +107,12 @@ def update(id):
                 id=id)
 
 # Create a form class
+class PasswordForm(FlaskForm):
+    email = StringField("Qual é o seu email?", validators=[DataRequired()])
+    password_hash = PasswordField("Qual é a sua senha?", validators=[DataRequired()])
+    submit = SubmitField("Submit")
+
+# Create a form class
 class NamerForm(FlaskForm):
     name = StringField("Qual é o seu nome?", validators=[DataRequired()])
     submit = SubmitField("Submit")
@@ -169,6 +175,37 @@ def add_user():
     return render_template("add_user.html", name=name,
                                             form=form,
                                             our_users=our_users)
+
+# Create Password Test Page
+@app.route('/test_pw', methods=['GET', 'POST'])
+
+def test_pw():
+    email = None
+    password = None
+    pw_to_check = None
+    passed = None
+    form = PasswordForm()
+
+    # Validate Form if it was Submited
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password_hash.data
+
+        # Clear Form
+        form.email.data = ''
+        form.password_hash.data = ''
+
+        # Look Up User By Email Adress
+        pw_to_check = Users.query.filter_by(email=email).first()
+        
+        # Check Hash Password
+        passed = check_password_hash(pw_to_check.password_hash, password)
+
+    return render_template("test_pw.html", email=email,
+                                           password=password,
+                                           pw_to_check=pw_to_check,
+                                           passed=passed,
+                                           form=form)
 
 # Create Name Page
 @app.route('/name', methods=['GET', 'POST'])
