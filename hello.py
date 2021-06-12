@@ -300,3 +300,5 @@ def page_not_fount(e):
 @app.errorhandler(500)
 def page_not_fount(e):
     return render_template("500.html")
+
+# Entendendo Branch
