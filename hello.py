@@ -8,6 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate, migrate
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import date
 
 # now create a flask instance
 app = Flask(__name__)
@@ -25,6 +26,17 @@ app.config['SECRET_KEY'] = "senha muito secreta"
 # The initialize the database
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+# JASON Thing
+@app.route('/date')
+def get_current_date():
+    favorite_pizza = {
+        "Mary": "4 Queijos",
+        "Carla": "Calabresa"
+    }
+    return favorite_pizza
+    # return {"Date": date.today()}
+
 
 # Create Model
 class Users(db.Model):
