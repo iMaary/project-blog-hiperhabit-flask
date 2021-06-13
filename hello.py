@@ -18,10 +18,10 @@ app = Flask(__name__)
 
 # Add database
 #Old SQLite DB
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 # New MySQL DB
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://username:password@localhost/db_name'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:62777999&aooa@localhost/our_users'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:62777999&aooa@localhost/our_users'
 
 # Secret Key
 app.config['SECRET_KEY'] = "senha muito secreta"
