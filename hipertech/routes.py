@@ -1,53 +1,8 @@
-from operator import pos
+from hipertech import db, app
 from flask import Flask, render_template, flash, request
-from flask.signals import request_finished
-from flask_wtf import FlaskForm, form
-from werkzeug.wrappers import AuthorizationMixin
-from wtforms import StringField, SubmitField, PasswordField, BooleanField
-from wtforms.fields.simple import PasswordField
-from wtforms.validators import DataRequired, Email, EqualTo, Length
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate, migrate
-from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import date
-from wtforms.widgets.core import TextArea
-
-# now create a flask instance
-app = Flask(__name__)
-
-# Add database
-#Old SQLite DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-# New MySQL DB
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://username:password@localhost/db_name'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:62777999&aooa@localhost/our_users'
-
-# Secret Key
-app.config['SECRET_KEY'] = "senha muito secreta"
-
-# The initialize the database
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
-
-# Create a Blog Post Model
-class Posts(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255))
-    content = db.Column(db.Text)
-    author = db.Column(db.String(255))
-    date_posted = db.Column(db.DateTime, default=datetime.utcnow)
-    # It's what will stay after of the route
-    slug = db.Column(db.String(255))
-
-# Create a Post Form
-class PostForm(FlaskForm):
-    title = StringField("Title", validators=[DataRequired()])
-    content = StringField("Content", validators=[DataRequired()], widget=TextArea())
-    author = StringField("Author", validators=[DataRequired()])
-    slug = StringField("Slug", validators=[DataRequired()])
-    submit = SubmitField("Submit", validators=[DataRequired()])
-
+from hipertech.forms import UserForm, NamerForm, PasswordForm, PostForm
+from hipertech.models import Users, Posts
 
 # Show Posts Page
 @app.route('/posts')
@@ -93,30 +48,6 @@ def get_current_date():
     # return {"Date": date.today()}
 
 
-# Create Model
-class Users(db.Model):
-    id = db.Column(db.Integer, primary_key=True) # Primary Key
-    name = db.Column(db.String(200), nullable=False)
-    email = db.Column(db.String(120), nullable=False, unique=True)
-    favorite_color = db.Column(db.String(120))
-    date_added = db.Column(db.DateTime, default=datetime.utcnow)
-    # Do some password stuff
-    password_hash = db.Column(db.String(128))
-
-    @property
-    def password(self):
-        raise AttributeError("a senha não pode ser lida")
-
-    @password.setter
-    def password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def verify_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-#Create A String
-def __repr__(self):
-    return '<Name %r>' % self.name
 
 @app.route('/delete/<int:id>')
 def delete(id):
@@ -138,14 +69,7 @@ def delete(id):
         return render_template("add_user.html", 
         name=name, form=form, our_users=our_users)
 
-# Create a form class
-class UserForm(FlaskForm):
-    name = StringField("Name", validators=[DataRequired()])
-    email = StringField("Email", validators=[DataRequired()])
-    favorite_color = StringField("Favorite Color")
-    password_hash = PasswordField("Senha", validators=[DataRequired(), EqualTo('password_hash2', message='As senhas devem combinar')])
-    password_hash2 = PasswordField("Confirmar Senha", validators=[DataRequired()])
-    submit = SubmitField("Submit")
+
 
 # Update Database Record
 @app.route('/update/<int:id>', methods=['GET', 'POST'])
@@ -173,28 +97,6 @@ def update(id):
                 name_to_update = name_to_update,
                 id=id)
 
-# Create a form class
-class PasswordForm(FlaskForm):
-    email = StringField("Qual é o seu email?", validators=[DataRequired()])
-    password_hash = PasswordField("Qual é a sua senha?", validators=[DataRequired()])
-    submit = SubmitField("Submit")
-
-# Create a form class
-class NamerForm(FlaskForm):
-    name = StringField("Qual é o seu nome?", validators=[DataRequired()])
-    submit = SubmitField("Submit")
-
-#def index():
-#    return "<h1>Hello World!</h1>"
-
-# FILTERS:
-# safe
-# capitalize
-# lower 
-# upper 
-# title
-# trim
-# spritags
 
 #Create a route decorate (it's how ...url.../home.html)
 @app.route('/') # it works when there ins't route name
@@ -208,14 +110,6 @@ def index():
                             first_name=first_name,
                             stuff=stuff,
                             favorites_pizza=favorites_pizza)
-
-# localhost:5000/user/mary
-@app.route('/user/<name>')
-
-def user(name):
-    return render_template("user.html", user_name=name)
-#set FLASK_APP=hello.py
-#set FLASK_ENV=development
 
 # Local create user register 
 @app.route('/user/add', methods=['GET', 'POST'])
@@ -274,21 +168,6 @@ def test_pw():
                                            passed=passed,
                                            form=form)
 
-# Create Name Page
-@app.route('/name', methods=['GET', 'POST'])
-
-def name():
-    name = None
-    form = NamerForm()
-    # Validate Form if it was Submited
-    if form.validate_on_submit():
-        name = form.name.data
-        form.name.data = ''
-        flash("Formulário Submetido Com Sucesso!")
-
-    return render_template("name.html", name = name,
-                                        form = form)
-
 # Create Custom Error Page
 
 #invalid url
@@ -300,5 +179,3 @@ def page_not_fount(e):
 @app.errorhandler(500)
 def page_not_fount(e):
     return render_template("500.html")
-
-# Entendendo Branch
